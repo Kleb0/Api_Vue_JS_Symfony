@@ -7,9 +7,14 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class FrontendController
 {
-    #[Route('/{vueRouting}', name: 'app_frontend', requirements: ['vueRouting' => '^(?!api).*'], defaults: ['vueRouting' => null])]
+    #[Route('/{reactRouting}', name: 'frontend', requirements: ['reactRouting' => '^(?!api).*'], defaults: ['vueRouting' => null])]
     public function index(): Response
     {
-        return new Response(file_get_contents(__DIR__.'/../../public/dist/index.html'));
+        $path = __DIR__.'/../../public/dist/index.html';
+
+        if (!file_exists($path)) {
+            return new Response('Frontend build not found.', Response::HTTP_NOT_FOUND);
+        }
+        return new Response(file_get_contents($path));
     }
 }

@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PersonController extends AbstractController
 {
-    #[Route('/api/persons', name: 'api_persons', methods: ['GET'])]
+    #[Route('/persons', name: 'api_persons', methods: ['GET'])]
     public function getPersons(PersonRepository $personRepository): JsonResponse
     {
         dd('API called');

@@ -1,5 +1,19 @@
+# Routes pour les contrôleurs 
 controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
+    resource: ../src/Controller/
     type: attribute
+
+# Routes spécifiques pour l'API avec préfixe /api
+api:
+    resource: ../src/Controller/
+    type: attribute
+    prefix: /api
+
+# Routes pour le frontend (gestion par Vue.js)
+frontend:
+    path: /{reactRouting}
+    controller: App\Controller\FrontendController::index
+    requirements:
+        reactRouting: '^(?!api).*'
+    defaults: {}
+        
