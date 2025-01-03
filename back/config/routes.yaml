@@ -3,13 +3,13 @@ controllers:
     resource: ../src/Controller/
     type: attribute
 
-# Routes spécifiques pour l'API avec préfixe /api
+# Specifics roads for the API
 api:
     resource: ../src/Controller/
     type: attribute
     prefix: /api
 
-# Routes pour le frontend (gestion par Vue.js)
+# Specifics roads for the frontend
 frontend:
     path: /{reactRouting}
     controller: App\Controller\FrontendController::index

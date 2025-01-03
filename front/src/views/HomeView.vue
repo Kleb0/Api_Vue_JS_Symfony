@@ -3,10 +3,10 @@
     <img alt="Vue logo" src="../assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
 
-    <p>Test de connexion avec l'API</p>
+    <!-- <p>Test de connexion avec l'API</p> -->
 
-    <h1>Liste des personnes</h1>
-    <table>
+    <!-- <h1>Liste des personnes</h1> -->
+    <!-- <table>
       <thead>
         <tr>
           <th>ID</th>
@@ -24,19 +24,19 @@
           <td>{{ person.lastname }}</td>
         </tr>
       </tbody>
-    </table>
+    </table> -->
   </div>
 </template>
 
 <script>
-import HelloWorld from '@/components/HelloWorld.vue';
+// import HelloWorld from '@/components/HelloWorld.vue';
 import api from '@/api';
 
 export default {
-  name: 'HomeView',
-  components: {
-    HelloWorld,
-  },
+  // name: 'HomeView',
+  // components: {
+  //   HelloWorld,
+  // },
   data() {
     return {
       persons: [], // Tableau pour stocker les données de l'API

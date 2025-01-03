@@ -1,14 +1,15 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: ['http://localhost:8080', 'http://127.0.0.1:8080']
+        allow_origin: ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://127.0.0.1:8000']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization']
         expose_headers: ['Link']
         max_age: 3600
+        allow_credentials: true
     paths:
         '^/api/':
-            allow_origin: ['*'] # À modifier selon vos besoins
+            allow_origin: ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://127.0.0.1:8000'] # À modifier selon vos besoins
             allow_methods: ['POST', 'GET', 'OPTIONS']
             allow_headers: ['Content-Type', 'Authorization']
             expose_headers: ['Link']
