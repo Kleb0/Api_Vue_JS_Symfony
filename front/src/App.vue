@@ -8,13 +8,19 @@
       <router-link to="/login">Login</router-link>
     </template>
     <template v-else>
-      <button @click="logout" class="btn-logout">Logout</button>
-      <div class="user-info">
+
+    <template v-if="userRoleName === 'ADMIN'">
+        <router-link to="/user-management">User Management</router-link> |
+    </template>
+            
+    <div class="user-info">
         <span> Hello, {{ userFirstName }}</span>
         <hr v-if="userRoleName === 'ADMIN'" class="divider" />
         <span v-if="userRoleName === 'ADMIN'" class="admin-info">
           Vous êtes <span class="admin-highlight">Admin</span>
         </span>
+        <hr class="divider" />
+        <button @click="logout" class="btn-logout">Logout</button>
       </div>
     </template>
 
@@ -30,7 +36,7 @@ import axios from 'axios';
 
 export default {
   setup() {
-    const isLoggedIn = ref(false);
+    const isLoggedIn = ref(localStorage.getItem('isLoggedIn') === 'true');
     const userFirstName = ref(localStorage.getItem('userFirstName') || '');
     const userRoleName = ref(localStorage.getItem('userRoleName') || '');
 
@@ -40,24 +46,31 @@ export default {
     };
 
     const checkToken = async () => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            try {
-                const response = await axios.get('http://localhost:8000/api/check-token', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                isLoggedIn.value = response.status === 200;
-            } catch (error) {
-                console.error('Token invalide ou expiré:', error);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                localStorage.removeItem('userFirstName');
-                localStorage.removeItem('userRoleName');
-            }
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+            // Vérifie si le token est valide
+            await axios.get('http://localhost:8000/api/check-token', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            isLoggedIn.value = true;
+            localStorage.setItem('isLoggedIn', 'true');
+        } catch (error) {
+            console.error('Invalid or expired token:', error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('userFirstName');
+            localStorage.removeItem('userRoleName');
+            isLoggedIn.value = false;
+            localStorage.setItem('isLoggedIn', 'false');
         }
-    };
+    } else {
+        isLoggedIn.value = false;
+        localStorage.setItem('isLoggedIn', 'false');
+    }
+  };
 
-    const logout = async () => {
+  const logout = async () => {
       try {
             await axios.post('http://localhost:8000/api/logout', {}, {
                 withCredentials: true, 
@@ -103,7 +116,7 @@ export default {
 <style scoped>
 .navbar {
   background-color: #42b983; 
-  padding: 40px;
+  padding: 35px;
   display: flex;
   justify-content: space-between; 
   align-items: center;
@@ -140,8 +153,17 @@ nav a.router-link-exact-active {
   cursor: pointer;
 }
 
+.btn-logout {
+  background: none;
+  border: none;
+  color: red;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 .btn-logout:hover {
   text-decoration: underline;
+  color: darkred; 
 }
 
 .user-info {

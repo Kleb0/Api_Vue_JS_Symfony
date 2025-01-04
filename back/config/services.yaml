@@ -6,6 +6,15 @@
 parameters:
 
 services:
+    Gesdinet\JWTRefreshTokenBundle\EventListener\AttachRefreshTokenOnSuccessListener:
+        arguments:
+            $tokenParameterName: refresh_token
+            $ttl: 2592000 # 30 jours (en secondes)
+            $singleUse: false # Permet de réutiliser le refresh token plusieurs fois
+            $cookieSettings: [] # Configuration des cookies (vide par défaut)
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: attachRefreshToken }
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.

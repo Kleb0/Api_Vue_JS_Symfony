@@ -12,12 +12,22 @@ security:
                 property: email
     firewalls:
         #the firewall has been modified for being stateless, we define the custom_authenticators to use the token authenticator
+
+        api_token_refresh:
+            pattern: ^/api/token/refresh
+            stateless: true
+            refresh_jwt:
+                check_path: gesdinet_jwt_refresh_token
+
+
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
-            stateless: true        
+            stateless: true 
             provider: app_user_provider
+
+
             json_login:
                 check_path: /api/login
                 username_path: email
@@ -31,8 +41,7 @@ security:
             pattern: ^/api
             stateless: true
             provider: app_user_provider
-            custom_authenticators:
-                - lexik_jwt_authentication.jwt_manager
+            jwt: ~
 
 
             # activate different ways to authenticate

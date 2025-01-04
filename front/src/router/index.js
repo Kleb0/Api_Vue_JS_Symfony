@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import LoginView from '../views/LoginView.vue'
+import UserManagementView from '../views/UserManagementView.vue'
 
 const routes = [
   {
@@ -26,7 +27,22 @@ const routes = [
     path: '/login',
     name: 'login',
     component : LoginView
-  }
+  },
+
+  {
+    path: '/user-management',
+    name: 'user-management',
+    component: UserManagementView,
+    beforeEnter: (to, from, next) => {
+      const role = localStorage.getItem('userRoleName');
+      if (role === 'ADMIN') {
+        next();
+      } else {
+        alert('Access denied. Admins only!');
+        next('/');
+      }
+    },
+  },
 ]
 
 const router = createRouter({

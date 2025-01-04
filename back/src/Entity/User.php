@@ -239,13 +239,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoleName(): ?string
     {
-        return $this->roleName;
+        $roles = $this->getRoles();
+        return $roles[0] ?? 'USER';
     }
 
     public function setRoleName(string $roleName): static
     {
         $this->roleName = $roleName;
-
         return $this;
     }
 

@@ -33,9 +33,11 @@ export default {
     const password = ref('');
     const errorMessage = ref('');
     const isLoggedIn = inject('isLoggedIn');
+
     if (!isLoggedIn) {
       console.error('isLoggedIn is not properly injected.');
     }
+    
     const router = useRouter();
     
 
@@ -50,17 +52,18 @@ export default {
 
 
         //Store token, first name and role in local storage
-        const { token, user } = response.data;
+        const { token, user, refresh_token } = response.data;
         localStorage.setItem('token', token);
+        localStorage.setItem('refresh_token', refresh_token);
         localStorage.setItem('userFirstName', user.first_name);
-        localStorage.setItem('userRoleName', user.role_name);
+        localStorage.setItem('userRoleName', user.roleName);
+        localStorage.setItem('isLoggedIn', 'true');
 
         const updateUserInfo = inject('updateUserInfo');
         if (updateUserInfo) updateUserInfo();
 
         // alert('Login successful');
         isLoggedIn.value = true;
-
         router.push('/');
 
       }
@@ -79,6 +82,7 @@ export default {
             headers: { Authorization: `Bearer ${token}` },
           });
           isLoggedIn.value = true;
+          localStorage.setItem('isLoggedIn', 'false');
         } catch (error) {
           console.error('Invalid or expired token:', error);
           localStorage.removeItem('token');
