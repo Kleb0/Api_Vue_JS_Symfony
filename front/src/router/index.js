@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import LoginView from '../views/LoginView.vue'
 import UserManagementView from '../views/UserManagementView.vue'
+import MoviesManagerView from '../views/MoviesManagerView.vue';
 
 const routes = [
   {
@@ -33,6 +34,20 @@ const routes = [
     path: '/user-management',
     name: 'user-management',
     component: UserManagementView,
+    beforeEnter: (to, from, next) => {
+      const role = localStorage.getItem('userRoleName');
+      if (role === 'ADMIN') {
+        next();
+      } else {
+        alert('Access denied. Admins only!');
+        next('/');
+      }
+    },
+  },
+  {
+    path: '/movies-management',
+    name: 'movies-management',
+    component: MoviesManagerView,
     beforeEnter: (to, from, next) => {
       const role = localStorage.getItem('userRoleName');
       if (role === 'ADMIN') {

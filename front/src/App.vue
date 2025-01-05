@@ -11,6 +11,7 @@
 
     <template v-if="userRoleName === 'ADMIN'">
         <router-link to="/user-management">User Management</router-link> |
+        <router-link to="/movies-management">Movies Management</router-link> |
     </template>
             
     <div class="user-info">
