@@ -57,19 +57,54 @@ export default {
         localStorage.setItem('refresh_token', refresh_token);
         localStorage.setItem('userFirstName', user.first_name);
         localStorage.setItem('userRoleName', user.roleName);
+
+
+
         localStorage.setItem('isLoggedIn', 'true');
 
         const updateUserInfo = inject('updateUserInfo');
         if (updateUserInfo) updateUserInfo();
 
+       
+        
         // alert('Login successful');
         isLoggedIn.value = true;
+        await fetchCurrentUser();
         router.push('/');
-
+        
+        
       }
       catch(error){
         console.error('Login failed:', error);
         errorMessage.value = 'Login failed. Please check your credentials.';
+      }
+    };
+
+    const fetchCurrentUser = async () => {
+      try {
+        
+        const token = localStorage.getItem('token');
+
+        if(!token){
+          throw new Error('No token found');
+        }
+
+
+        const response = await axios.get('http://localhost:8000/api/current-user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const { email, firstName, roleName } = response.data;
+
+        // Stocker les informations utilisateur dans le localStorage
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userFirstName', firstName);
+        localStorage.setItem('userRoleName', roleName);
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+        errorMessage.value = 'Failed to fetch user information.';
       }
     };
 

@@ -29,7 +29,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:list', 'user:item'])]
     private ?int $id = null;
 
-    #[ORM\Column(nullable: false)]
+    #[ORM\Column(name: 'custom_id', type: 'integer', nullable: false)]
     #[Groups(['user:list', 'user:item'])]
     private ?int $customId = null;
 
@@ -323,12 +323,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return $this->email; // Retourne l'identifiant unique de l'utilisateur
+        return $this->email; 
     }
 
     public function eraseCredentials(): void
     {
-        // Pas de logique particulière ici si vous n'avez pas de données sensibles à nettoyer.
+        
     }
 
     }

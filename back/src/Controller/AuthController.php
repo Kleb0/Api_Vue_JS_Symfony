@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\User;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 use Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class AuthController extends AbstractController
 {
@@ -67,5 +68,23 @@ class AuthController extends AbstractController
     public function checkToken(): JsonResponse
     {
         return new JsonResponse(['message' => 'Token valide'], 200);
+    }
+
+    #[Route('/current-user', name: 'current_user', methods: ['GET'])]
+    public function getCurrentUser(Security $security): JsonResponse
+    {
+        $user = $security->getUser();
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not authenticated'], 401);
+        }
+
+        return new JsonResponse([
+            'login successful',
+            'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'roleName' => $user->getRoleName(),
+        ]);
     }
 }

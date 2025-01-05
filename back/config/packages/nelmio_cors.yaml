@@ -10,6 +10,6 @@ nelmio_cors:
     paths:
         '^/api/':
             allow_origin: ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://127.0.0.1:8000'] # À modifier selon vos besoins
-            allow_methods: ['POST', 'GET', 'OPTIONS']
+            allow_methods: ['POST', 'GET', 'OPTIONS', 'PUT', 'PATCH', 'DELETE']
             allow_headers: ['Content-Type', 'Authorization']
             expose_headers: ['Link']

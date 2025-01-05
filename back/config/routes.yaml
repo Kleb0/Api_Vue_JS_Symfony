@@ -17,9 +17,4 @@ frontend:
         reactRouting: '^(?!api).*'
     defaults: {}
 
-#road for the refresh token
-# refresh_token:
-#     path: /api/token/refresh
-#     methods: [POST]
-#     controller: gesdinet.jwtrefreshtoken::refresh    
         

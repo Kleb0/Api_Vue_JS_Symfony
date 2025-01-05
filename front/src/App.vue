@@ -32,10 +32,12 @@
 
 import { ref, provide, onMounted, watch } from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 
 export default {
   setup() {
+  
     const isLoggedIn = ref(localStorage.getItem('isLoggedIn') === 'true');
     const userFirstName = ref(localStorage.getItem('userFirstName') || '');
     const userRoleName = ref(localStorage.getItem('userRoleName') || '');
@@ -45,8 +47,12 @@ export default {
       userRoleName.value = localStorage.getItem('userRoleName') || '';
     };
 
+    provide('updateUserInfo', updateUserInfo);
+
     const checkToken = async () => {
     const token = localStorage.getItem('token');
+    axios.defaults.baseURL = 'http://localhost:8000';
+
     if (token) {
         try {
             // Vérifie si le token est valide
@@ -70,21 +76,18 @@ export default {
     }
   };
 
-  const logout = async () => {
-      try {
-            await axios.post('http://localhost:8000/api/logout', {}, {
-                withCredentials: true, 
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
-            localStorage.clear();
-            isLoggedIn.value = false;
-            localStorage.setItem('userFirstName', '');
-            localStorage.setItem('userRoleName', '');        
-        } catch (error) {
-            console.error('Error during disconnection:', error);
-        }
+    const logout = async () => {
+        try {
+        localStorage.clear();
+        isLoggedIn.value = false; // Reset isLoggedIn
+        userFirstName.value = ''; // Clear user info
+        userRoleName.value = '';
+
+        const router = useRouter();
+        router.push('/'); // Redirige vers la page d'accueil après logout
+      } catch (error) {
+        console.error('Error during logout:', error);
+      }
     };
 
     watch(isLoggedIn, (newValue) => {

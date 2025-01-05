@@ -13,21 +13,26 @@ security:
     firewalls:
         #the firewall has been modified for being stateless, we define the custom_authenticators to use the token authenticator
 
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
+
         api_token_refresh:
             pattern: ^/api/token/refresh
             stateless: true
             refresh_jwt:
                 check_path: gesdinet_jwt_refresh_token
 
-
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
         main:
             stateless: true 
             provider: app_user_provider
-
-
+            
             json_login:
                 check_path: /api/login
                 username_path: email
@@ -37,11 +42,6 @@ security:
                 path: /api/logout
                 invalidate_session: false    
 
-        api:
-            pattern: ^/api
-            stateless: true
-            provider: app_user_provider
-            jwt: ~
 
 
             # activate different ways to authenticate
@@ -61,12 +61,14 @@ security:
     access_control:
         #here we restrict the access to some paths, by exiging the user to be authenticated
         #- { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        #- {path : ^/api/logout, roles: IS_AUTHENTICATED_ANONYMOUSLY}
-        #- { path: ^/api/register-user, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        #- { path: ^/api/token/refresh, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - {path : ^/api/logout, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/current-user, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/admin, roles: ROLE_ADMIN }
+
+        #- { path: ^/api/register-user, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         #- { path: ^/api/check-token, roles: IS_AUTHENTICATED_FULLY }
         #- { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
