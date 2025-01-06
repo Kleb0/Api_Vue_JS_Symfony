@@ -96,16 +96,37 @@
             </td>
             
             <td>
-              <ul>
-                <li v-for="category in movie.categories" :key="category.customId">
-                  <span v-if="!editMode[movie.customId]">{{ category.categoryName }}</span>
-                  <div v-else>
-                    {{ category.categoryName }}
-                    <button @click="removeCategoryFromEditedMovie(category.customId)">Supprimer</button>
-                  </div>
-                </li>
-              </ul>
-            </td>
+                <ul>
+                  <li v-for="category in movie.categories" :key="category.customId">
+                    <span v-if="!editMode[movie.customId]">{{ category.categoryName }}</span>
+                    <div v-else>
+                      {{ category.categoryName }}
+                      <button @click="removeCategoryFromEditedMovie(category.customId)">Supprimer</button>
+                    </div>
+                  </li>
+                </ul>
+
+              <div v-if="editMode[movie.customId]">
+
+                <button 
+                  @click="showCategoryDropdown[movie.customId] = !showCategoryDropdown[movie.customId]"
+                  v-if="movie.customId"
+                >
+                Ajouter des catégories
+              </button>
+
+              <div v-if="movie.customId && showCategoryDropdown[movie.customId]" style="margin-top: 10px;">
+                  <label for="categories">Sélectionner une catégorie :</label>
+                  <select v-model="selectedCategoryForEdit[movie.customId]" @change="addCategoryToEditedMovie(movie.customId)">
+                    <option v-for="category in categories" :key="category.customId" :value="category.customId">
+                      {{ category.categoryName }}
+                    </option>
+                  </select>
+                </div>
+
+
+              </div>
+              </td>
 
             <td>
               <div v-if="!editMode[movie.customId]">
@@ -118,6 +139,8 @@
             <td>
               <button v-if="!editMode[movie.customId]" @click="enableEditMode(movie)">Modifier</button>
               <button v-else @click="saveMovieChanges(movie)">Enregistrer</button>
+              <button @click="deleteMovie(movie.customId)">Supprimer</button>
+              <button @click="viewMovie(movie.customId)">Voir</button> 
             </td>
           </tr>
         </tbody>
@@ -151,9 +174,16 @@
   
   <script>
   import axios from 'axios';
+  import { reactive } from 'vue';
   
   export default {
     name: 'MovieManagerView',
+    setup() {
+    const selectedCategoryForEdit = reactive({});
+      return { selectedCategoryForEdit };
+    },
+
+
     data() {
       return {
         // Gestion des catégories
@@ -162,6 +192,7 @@
         editMode: false,
         editedCategory: null,
         editedCategoryName: '',
+        showCategoryDropdown: {},
 
         editedMovie: {
           title:'',
@@ -170,6 +201,9 @@
           director: '',
           actors: '',
           selectedCategories: [],
+          selectedCategoryForEdit: {}, 
+          showCategoryDropdown: {},
+          editMode: {},
         },
         
   
@@ -192,6 +226,10 @@
     methods: {
       // Gestion des catégories
 
+      viewMovie(customId) {
+      this.$router.push({ name: 'movie', params: { customId } });
+    },
+        
     async fetchCategories() {
         try {
           const response = await axios.get('http://localhost:8000/api/categories-list');
@@ -257,23 +295,32 @@
         console.error('Erreur lors du chargement des films :', error);
       }
     },
+
     enableEditMode(movie) {
-      if (movie.customId)
-      {
+      if (movie.customId) {
         this.editMode = {
-          ...this.editMode, 
-          [movie.customId]: true
+          ...this.editMode,
+          [movie.customId]: true,
         };
-        this.editedMovie = { 
+
+        this.editedMovie = {
           ...movie,
           actors: Array.isArray(movie.actors) ? movie.actors.join(', ') : movie.actors,
           selectedCategories: movie.categories.map(cat => cat.customId),
           image: movie.image,
-         };
-      } 
-      else 
-      {
-        console.error('Le film n\'a pas de customId défini', movie);
+        };
+
+        // Initialiser showCategoryDropdown
+        if (!(movie.customId in this.showCategoryDropdown)) {
+          this.showCategoryDropdown[movie.customId] = false;
+        }
+
+        // Initialiser selectedCategoryForEdit
+        if (!(movie.customId in this.selectedCategoryForEdit)) {
+          this.selectedCategoryForEdit[movie.customId] = null;
+        }
+      } else {
+        console.error("Le film n'a pas de customId défini", movie);
       }
     },
 
@@ -378,6 +425,39 @@
             alert('Erreur lors de l\'ajout du film.');
         }
     },
+
+      addCategoryToEditedMovie(customId) {
+      const selectedCategoryId = this.selectedCategoryForEdit[customId];
+      if (!selectedCategoryId) return;
+
+      const selectedCategory = this.categories.find(cat => cat.customId === selectedCategoryId);
+      const editedCategories = this.editedMovie.selectedCategories;
+
+      // Vérifie si la catégorie est déjà ajoutée
+      if (!editedCategories.includes(selectedCategoryId)) {
+        this.editedMovie.selectedCategories.push(selectedCategoryId);
+        this.editedMovie.categories.push(selectedCategory);
+        alert(`Catégorie "${selectedCategory.categoryName}" ajoutée au film.`);
+      } else {
+        alert('Cette catégorie est déjà ajoutée.');
+      }
+
+      // Réinitialise la sélection
+      this.selectedCategoryForEdit[customId] = null;
+    },
+
+    async deleteMovie(customId) {
+    if (confirm('Voulez-vous vraiment supprimer ce film ?')) {
+      try {
+        await axios.delete(`http://localhost:8000/api/movies_delete/${customId}`);
+        alert('Film supprimé avec succès !');
+        this.fetchMovies(); // Recharger la liste des films après suppression
+      } catch (error) {
+        console.error('Erreur lors de la suppression du film :', error);
+        alert('Erreur lors de la suppression du film.');
+      }
+    }
+  },
 
     addCategoryToMovie() {
         if (this.selectedCategory && !this.newMovie.selectedCategories.includes(this.selectedCategory)) {

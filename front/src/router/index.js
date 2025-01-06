@@ -4,6 +4,8 @@ import RegisterView from '../views/RegisterView.vue'
 import LoginView from '../views/LoginView.vue'
 import UserManagementView from '../views/UserManagementView.vue'
 import MoviesManagerView from '../views/MoviesManagerView.vue';
+import MainCatalogueView from '../views/MainCatalogueView.vue';
+import MovieView from '../views/MovieView.vue';
 
 const routes = [
   {
@@ -57,6 +59,16 @@ const routes = [
         next('/');
       }
     },
+  },
+  {
+    path: '/main-catalog',
+    name: 'main-catalog',
+    component: MainCatalogueView,
+  },
+  {
+    path: '/movie/:customId',
+    name: 'movie',
+    component: MovieView,
   },
 ]
 

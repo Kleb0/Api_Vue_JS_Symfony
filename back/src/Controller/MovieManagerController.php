@@ -14,6 +14,34 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class MovieManagerController extends AbstractController
 {
+
+    #[Route('/movies/{customId}', name: 'get_movie_by_customId', methods: ['GET'])]
+    public function getMovieByCustomId(EntityManagerInterface $entityManager, int $customId): JsonResponse
+    {
+        $movie = $entityManager->getRepository(Movies::class)->findOneBy(['customId' => $customId]);
+
+        if (!$movie) {
+            return new JsonResponse(['error' => 'Movie not found'], 404);
+        }
+
+        $data = [
+            'id' => $movie->getId(),
+            'customId' => $movie->getCustomId(),
+            'title' => $movie->getTitle(),
+            'releaseDate' => $movie->getReleaseDate()->format('Y-m-d'),
+            'summary' => $movie->getSummary(),
+            'director' => $movie->getDirector(),
+            'actors' => $movie->getActors(),
+            'categories' => array_map(
+                fn($cat) => ['customId' => $cat->getCustomId(), 'categoryName' => $cat->getCategoryName()],
+                $movie->getCategories()->toArray()
+            ),
+            'likes' => $movie->getLikes(),
+            'image' => $this->getParameter('base_url') . '/' . $movie->getImage(),
+        ];
+
+        return new JsonResponse($data, 200);
+    }
     
     #[Route('/movies_insert', name: 'movies_insert', methods: ['POST'])]
     public function insertMovie(Request $request, EntityManagerInterface $entityManager, ImageUploader $imageUploader): JsonResponse
@@ -38,10 +66,19 @@ class MovieManagerController extends AbstractController
         if ($existingMovie) {
             return new JsonResponse(['error' => 'Movie with this title already exists'], 400);
         }
+        // Calculer un customId unique
+            $existingCustomIds = $entityManager->getRepository(Movies::class)
+            ->createQueryBuilder('m')
+            ->select('m.customId')
+            ->getQuery()
+            ->getResult();
+        $existingCustomIds = array_column($existingCustomIds, 'customId');
 
-        // Calculer l'ID personnalisé
-        $totalMovies = $entityManager->getRepository(Movies::class)->count([]);
-        $customId = $totalMovies + 1;
+        // Trouver le plus petit customId libre
+        $customId = 1;
+        while (in_array($customId, $existingCustomIds, true)) {
+            $customId++;
+        }
 
         // Créer une nouvelle instance de Movie
         $movie = new Movies();
@@ -167,6 +204,23 @@ class MovieManagerController extends AbstractController
         
         $entityManager->flush();
         return new JsonResponse(['success' => 'Movie updated successfully'], 200);
+    }
+
+
+    #[Route('/movies_delete/{customId}', name: 'movies_delete', methods: ['DELETE'])]
+    public function deleteMovie(EntityManagerInterface $entityManager, int $customId): JsonResponse
+    {
+        $movie = $entityManager->getRepository(Movies::class)
+            ->findOneBy(['customId' => $customId]);
+
+        if (!$movie) {
+            return new JsonResponse(['error' => 'Movie not found'], 404);
+        }
+
+        $entityManager->remove($movie);
+        $entityManager->flush();
+
+        return new JsonResponse(['success' => 'Movie deleted successfully'], 200);
     }
 
 

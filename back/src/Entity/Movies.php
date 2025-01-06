@@ -9,12 +9,21 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\GetCollection;
 
+
 #[ORM\Entity(repositoryClass: MoviesRepository::class)]
+
+
 #[ApiResource(
     operations: [
-        new Get(normalizationContext: ['groups' => 'movies:item']),
+        new Get(
+            uriTemplate: '/movies/{customId}',
+            requirements: ['customId' => '\d+'],
+            normalizationContext: ['groups' => 'movies:item'],
+            name: 'get_movie_by_customId'
+        ),
         new GetCollection(normalizationContext: ['groups' => 'movies:list']),
     ],
     order: ['releaseDate' => 'DESC']
