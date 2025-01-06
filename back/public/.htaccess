@@ -1,0 +1,7 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Expose the uploads directory
+    RewriteCond %{REQUEST_URI} ^/uploads/
+    RewriteRule ^uploads/(.*)$ uploads/$1 [L]
+</IfModule>

@@ -27,11 +27,15 @@ class Movies
     #[Groups(['movies:list', 'movies:item'])]
     private ?int $id = null;
 
+    #[ORM\Column]
+    #[Groups(['movies:list', 'movies:item'])]
+    private ?int $customId = null;
+
     #[ORM\Column(length: 255)]
     #[Groups(['movies:list', 'movies:item'])]
     private ?string $title = null;
 
-    #[ORM\Column(type: 'date')]
+    #[ORM\Column(type: 'date', name: 'release_date')]
     #[Groups(['movies:item'])]
     private ?\DateTimeInterface $releaseDate = null;
 
@@ -75,6 +79,18 @@ class Movies
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getCustomId(): ?int
+    {
+        return $this->customId;
+    }
+
+    public function setCustomId(int $customId): self
+    {
+        $this->customId = $customId;
+
+        return $this;
     }
 
     public function getTitle(): ?string
@@ -197,6 +213,8 @@ class Movies
         return $this;
     }
 
+
+
     public function getImage(): ?string
     {
         return $this->image;
@@ -208,4 +226,5 @@ class Movies
 
         return $this;
     }
+    
 }

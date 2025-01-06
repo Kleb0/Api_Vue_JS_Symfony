@@ -4,15 +4,17 @@ namespace App\Service;
 
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class ImageUploader
 {
     private string $targetDirectory;
     private SluggerInterface $slugger;
 
-    public function __construct(string $targetDirectory, SluggerInterface $slugger)
+    public function __construct(ParameterBagInterface $parameterBag, SluggerInterface $slugger)
     {
-        $this->targetDirectory = $targetDirectory;
+
+        $this->targetDirectory = $parameterBag->get('images_directory');
         $this->slugger = $slugger;
     }
 
@@ -22,15 +24,10 @@ class ImageUploader
         $safeFilename = $this->slugger->slug($originalFilename);
         $newFilename = $safeFilename . '.' . $file->guessExtension();
 
-        // Vérifier si le fichier existe déjà
-        $targetPath = $this->getTargetDirectory() . '/' . $newFilename;
-        if (file_exists($targetPath)) {
-            return $newFilename; // Retourner le nom de fichier existant
-        }
-
         $file->move($this->getTargetDirectory(), $newFilename);
 
-        return $newFilename;
+        // Retourner le chemin relatif pour stocker dans la BDD
+        return 'uploads/movies_images/' . $newFilename;
     }
 
     public function getTargetDirectory(): string
