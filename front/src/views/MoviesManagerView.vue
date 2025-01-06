@@ -64,27 +64,61 @@
             <th>Catégories</th>
             <th>Image</th>
             <th>Likes</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="movie in movies" :key="movie.id">
-            <td>{{ movie.customId }}</td>
-            <td>{{ movie.title }}</td>
-            <td>{{ movie.releaseDate }}</td>
-            <td>{{ movie.summary }}</td>
-            <td>{{ movie.director }}</td>
-            <td>{{ movie.actors.join(', ') }}</td>
+          <tr v-for="movie in movies" :key="movie.customId || movie.id">
+            <td>{{ movie.customId || 'Inconnu' }}</td>
+            <td>
+              <span v-if="!editMode[movie.customId]">{{ movie.title }}</span>
+              <input v-else type="text" v-model="editedMovie.title" />
+            </td>
+
+            <td>
+                <span v-if="!editMode[movie.customId]">{{ movie.releaseDate }}</span>
+                <input v-else type="date" v-model="editedMovie.releaseDate" />
+            </td>
+
+            <td>
+              <span v-if="!editMode[movie.customId]">{{ movie.summary }}</span>
+              <textarea v-else v-model="editedMovie.summary"></textarea>
+            </td>
+          
+            <td>
+              <span v-if="!editMode[movie.customId]">{{ movie.director }}</span>
+              <input v-else type="text" v-model="editedMovie.director" />
+            </td>
+
+            <td>
+              <span v-if="!editMode[movie.customId]">{{ movie.actors.join(', ') }}</span>
+              <input v-else type="text" v-model="editedMovie.actors" />
+            </td>
+            
             <td>
               <ul>
-                <li v-for="category in movie.categories" :key="category">{{ category }}</li>
+                <li v-for="category in movie.categories" :key="category.customId">
+                  <span v-if="!editMode[movie.customId]">{{ category.categoryName }}</span>
+                  <div v-else>
+                    {{ category.categoryName }}
+                    <button @click="removeCategoryFromEditedMovie(category.customId)">Supprimer</button>
+                  </div>
+                </li>
               </ul>
             </td>
+
             <td>
-                <img 
-                  :src="movie.image" alt="Image du film" style="max-width: 100px;" 
-                />
-              </td>
+              <div v-if="!editMode[movie.customId]">
+                <img :src="movie.image" alt="Image du film" style="max-width: 100px;" />
+              </div>          
+            </td>
+
+
             <td>{{ movie.likes }}</td>
+            <td>
+              <button v-if="!editMode[movie.customId]" @click="enableEditMode(movie)">Modifier</button>
+              <button v-else @click="saveMovieChanges(movie)">Enregistrer</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -128,6 +162,16 @@
         editMode: false,
         editedCategory: null,
         editedCategoryName: '',
+
+        editedMovie: {
+          title:'',
+          releaseDate: '',
+          summary: '',
+          director: '',
+          actors: '',
+          selectedCategories: [],
+        },
+        
   
         // Gestion des films
         newMovie: {
@@ -200,18 +244,89 @@
   
       // Gestion des films
       async fetchMovies() {
-        try {
-            const response = await axios.get('http://localhost:8000/api/movies_list');
-            this.movies = response.data.map(movie => {
-            return {
-                ...movie,
-                categories: movie.categories.map(catId => this.getCategoryName(catId)),
-                file: null,
-            };
-            });
-        } catch (error) {
-            console.error('Erreur lors du chargement des films :', error);
-        }
+      try {
+        const response = await axios.get('http://localhost:8000/api/movies_list');
+        console.log('Films récupérés :', response.data); 
+
+        this.movies = response.data.map(movie => ({
+        ...movie,
+        categories: movie.categories, 
+        file: null,
+      }));
+      } catch (error) {
+        console.error('Erreur lors du chargement des films :', error);
+      }
+    },
+    enableEditMode(movie) {
+      if (movie.customId)
+      {
+        this.editMode = {
+          ...this.editMode, 
+          [movie.customId]: true
+        };
+        this.editedMovie = { 
+          ...movie,
+          actors: Array.isArray(movie.actors) ? movie.actors.join(', ') : movie.actors,
+          selectedCategories: movie.categories.map(cat => cat.customId),
+          image: movie.image,
+         };
+      } 
+      else 
+      {
+        console.error('Le film n\'a pas de customId défini', movie);
+      }
+    },
+
+    async saveMovieChanges(movie) {
+      try {
+
+        await axios.patch(`http://localhost:8000/api/movies_update/${movie.customId}`, {
+          title: this.editedMovie.title,
+          releaseDate: this.editedMovie.releaseDate,
+          summary: this.editedMovie.summary,
+          director: this.editedMovie.director,
+          actors: this.editedMovie.actors.split(',').map(actor => actor.trim()),
+          categories: this.editedMovie.selectedCategories,
+        });
+
+        movie.title = this.editedMovie.title;
+        movie.releaseDate = this.editedMovie.releaseDate;
+        movie.summary = this.editedMovie.summary;
+        movie.director = this.editedMovie.director;
+        movie.actors = this.editedMovie.actors.split(',').map(actor => actor.trim());
+
+        movie.categories = this.categories.filter(cat => this.editedMovie.selectedCategories.includes(cat.customId));
+        movie.image = this.editedMovie.image;
+
+        this.editMode = { ...this.editMode, [movie.customId]: false };
+        this.editedMovie = { 
+          title: '',
+          releaseDate: '',
+          summary: '',
+          director: '',
+          actors: '',
+          selectedCategories: [], 
+        };
+      } catch (error) {
+        console.error('Erreur lors de la modification :', error);
+      }
+    },
+
+    removeCategoryFromEditedMovie(categoryId) {
+    const categoryIndex = this.editedMovie.categories.findIndex(cat => cat.customId === categoryId);
+      if (categoryIndex !== -1) {
+
+        const removedCategory = this.editedMovie.categories.splice(categoryIndex, 1)[0];
+        const movieTitle = this.editedMovie.title || 'inconnu';
+
+        alert(`Avant suppression: ${JSON.stringify(this.editedMovie.selectedCategories)}`);
+        this.editedMovie.selectedCategories = this.editedMovie.selectedCategories.filter(catId => catId !== removedCategory.customId);
+        alert(`Après suppression: ${JSON.stringify(this.editedMovie.selectedCategories)}`);
+
+        alert(`Vous avez supprimé la catégorie "${removedCategory.categoryName}" du film "${movieTitle}" en front.`);
+      } else {
+        alert(`La catégorie avec l'ID ${categoryId} n'a pas été trouvée.`);
+      }
     },
       
     async addMovie() {
@@ -281,13 +396,9 @@
 
     onFileChange(event) {
       this.file = event.target.files[0];
-      this.imagePreview = URL.createObjectURL(this.file); 
-
-      const selectedMovie = this.movies.find(movie => movie.id === this.selectedMovieId);
-      if (selectedMovie) {
-        selectedMovie.file = this.file;
-      }
-    },
+      this.imagePreview = URL.createObjectURL(this.file);
+             
+      },
     },
 
     mounted() {

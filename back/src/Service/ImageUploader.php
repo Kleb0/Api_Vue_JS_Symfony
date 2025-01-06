@@ -30,6 +30,24 @@ class ImageUploader
         return 'uploads/movies_images/' . $newFilename;
     }
 
+    public function uploadFromUrl(string $imageUrl): string
+    {
+        $extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION);
+        $safeFilename = pathinfo($imageUrl, PATHINFO_FILENAME);
+        $newFilename = $this->slugger->slug($safeFilename) . '.' . $extension;
+    
+        $imageContent = file_get_contents($imageUrl);
+        if ($imageContent === false) {
+            throw new \Exception('Unable to download image from URL.');
+        }
+    
+        $filePath = $this->getTargetDirectory() . '/' . $newFilename;
+        file_put_contents($filePath, $imageContent);
+    
+        return 'uploads/movies_images/' . $newFilename;
+    }
+
+
     public function getTargetDirectory(): string
     {
         return $this->targetDirectory;

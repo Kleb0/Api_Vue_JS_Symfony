@@ -226,5 +226,11 @@ class Movies
 
         return $this;
     }
+
+    public function clearCategories(): self
+    {
+        $this->categories->clear();
+        return $this;
+    }
     
 }

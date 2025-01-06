@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class MovieManagerController extends AbstractController
 {
+    
     #[Route('/movies_insert', name: 'movies_insert', methods: ['POST'])]
     public function insertMovie(Request $request, EntityManagerInterface $entityManager, ImageUploader $imageUploader): JsonResponse
     {
@@ -93,7 +94,12 @@ class MovieManagerController extends AbstractController
                 'releaseDate' => $movie->getReleaseDate()->format('Y-m-d'),
                 'summary' => $movie->getSummary(),
                 'director' => $movie->getDirector(),
-                'categories' => array_map(fn($cat) => $cat->getCustomId(), $movie->getCategories()->toArray()),
+
+                'categories' => array_map(
+                    fn($cat) => ['customId' => $cat->getCustomId(), 'categoryName' => $cat->getCategoryName()],
+                    $movie->getCategories()->toArray()
+                ),
+
                 'actors' => $movie->getActors(),
                 'likes' => $movie->getLikes(),
                 // 'image' => $this->getParameter('base_url') . $movie->getImage(),
@@ -104,6 +110,66 @@ class MovieManagerController extends AbstractController
         return new JsonResponse($data);
     }
 
+    #[Route('/movies_update/{customId}', name: 'movies_update_title', methods: ['PATCH'])]
+    public function updateMovie(Request $request, EntityManagerInterface $entityManager, ImageUploader $imageUploader, int $customId): JsonResponse
+    {
+        $movie = $entityManager->getRepository(Movies::class)->findOneBy(['customId' => $customId]);
+
+        if (!$movie) {
+            return new JsonResponse(['error' => 'Movie not found'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['title'])) {
+            $movie->setTitle($data['title']);
+        }
+
+        if (isset($data['releaseDate'])) {
+            $movie->setReleaseDate(new \DateTime($data['releaseDate']));
+        }
+
+        if (isset($data['summary'])) {
+            $movie->setSummary($data['summary']);
+        }
+
+        if (isset($data['director'])) { 
+            $movie->setDirector($data['director']);
+        }
+
+        if (isset($data['actors'])) {
+            $movie->setActors($data['actors']);
+        }
+
+        // Gestion des catégories
+        if (isset($data['categories'])) {
+            error_log('Catégories reçues : ' . json_encode($data['categories']));
+
+            // Synchronisation des catégories
+            $currentCategories = $movie->getCategories();
+            $newCategories = $entityManager->getRepository(MoviesCategories::class)
+            ->findBy(['customId' => $data['categories']]);
+
+             // Supprimer les catégories qui ne sont plus présentes
+            foreach ($currentCategories as $currentCategory) {
+                if (!in_array($currentCategory, $newCategories, true)) {
+                    $movie->removeCategory($currentCategory);
+                }
+            }
+
+            // Ajouter les nouvelles catégories
+            foreach ($newCategories as $newCategory) {
+                if (!$currentCategories->contains($newCategory)) {
+                    $movie->addCategory($newCategory);
+                }
+            }              
+        }
+        
+        $entityManager->flush();
+        return new JsonResponse(['success' => 'Movie updated successfully'], 200);
+    }
+
+
     #[Route('/movies_insert', name: 'movies_insert_options', methods: ['OPTIONS'])]
     public function preflightMoviesInsert(): JsonResponse
     {
@@ -113,8 +179,6 @@ class MovieManagerController extends AbstractController
             'Access-Control-Allow-Headers' => 'Content-Type, Authorization, Accept, X-Requested-With',
         ]);
     }
-
-
 
     // ------- categories creator -------
 

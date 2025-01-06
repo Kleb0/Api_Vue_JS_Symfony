@@ -91,9 +91,8 @@ class MoviesCategories
     public function removeMovie(Movies $movie): self
     {
         if ($this->movies->removeElement($movie)) {
-            $movie->removeCategory($this);
+            $movie->removeCategory($this); // Synchronisation bidirectionnelle
         }
-
         return $this;
     }
 }

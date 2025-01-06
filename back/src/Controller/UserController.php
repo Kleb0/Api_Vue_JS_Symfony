@@ -27,7 +27,7 @@ class UserController extends AbstractController
 
          // Get the role Admin
          $roleRepository = $entityManager->getRepository(Role::class);
-         $adminRole = $roleRepository->findOneBy(['id' => 1]); // ID du rôle ADMIN
+         $adminRole = $roleRepository->findOneBy(['id' => 2]); // ID du rôle user par défaut
 
          if (!$adminRole) {
             return new JsonResponse(['message' => 'Le rôle ADMIN est introuvable.'], 500);
@@ -51,7 +51,7 @@ class UserController extends AbstractController
         $user->setPassword($hashedPassword);
 
         $user->setRole($adminRole); 
-        $user->setRoleName('ADMIN'); 
+        $user->setRoleName('USER'); 
         $user->setRoleId($adminRole->getId());
 
         $user->setComments('');
